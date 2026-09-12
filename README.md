@@ -1,2 +1,3 @@
-# economic-funding-company
-Economic Funding Company — economic development for countries, states and municipalities.
+# Economic Funding Company
+
+Public website for Economic Funding Company. Published with GitHub Pages from main.

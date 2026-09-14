@@ -1,51 +1,7 @@
-// EFC contact inquiry handling.
-// Add a verified recipient to enable opening an inquiry in the visitor's email app.
-const contactEmail = "";
-const form = document.querySelector('.contact-form');
-if (form) {
- const status = document.getElementById('contact-status');
- if (contactEmail) {
-  const link = document.createElement('a');
-  link.href = 'mailto:' + contactEmail; link.textContent = contactEmail;
-  document.getElementById('contact-email').replaceChildren(link);
-  form.querySelector('button').textContent = 'Open email draft';
-  status.textContent = 'Prepare an inquiry and open it in your email app to review and send.';
- }
- form.addEventListener('submit', event => {
-  event.preventDefault();
-  const data = new FormData(form);
-  const body = ['Name: '+data.get('name'), 'Email: '+data.get('email'), 'Organization: '+data.get('organization'), '', data.get('message')].join('\n');
-  if (contactEmail) {
-   location.href = 'mailto:'+contactEmail+'?subject='+encodeURIComponent('Economic Funding Company inquiry')+'&body='+encodeURIComponent(body);
-   status.textContent = 'Email draft requested. Review and send it in your email app. This website has not sent your inquiry.';
-  } else {
-   const url = URL.createObjectURL(new Blob([body], {type: 'text/plain;charset=utf-8'}));
-   const link = document.createElement('a'); link.href = url; link.download = 'efc-inquiry.txt'; link.click();
-   setTimeout(() => URL.revokeObjectURL(url), 1000);
-   status.textContent = 'Your inquiry was downloaded. It has not been sent.';
-  }
- });
-}
-
-// Rotate supplied artwork, keeping alternative text synchronized.
-const logo = document.getElementById('rotating-logo');
-const toggle = document.getElementById('logo-rotation-toggle');
-if (logo && toggle) {
- const logos = [{"src":"assets/master-logo.png","alt":"Economic Funding Company"},{"src":"assets/california-logo.png","alt":"California Economic Funding Company"},{"src":"assets/colorado-logo.png","alt":"Colorado Economic Funding Company"},{"src":"assets/canada-logo.png","alt":"Canada Economic Funding Company"},{"src":"assets/ecuador-logo.png","alt":"Ecuador Funding Company"},{"src":"assets/mississippi-logo.png","alt":"Mississippi Economic Funding Corporation"}];
- const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
- let paused = reducedMotion.matches, current = 0, timer;
- toggle.hidden = false;
- function sync() {
-  clearInterval(timer);
-  toggle.textContent = paused ? 'Play logos' : 'Pause logos';
-  toggle.setAttribute('aria-pressed', String(paused));
-  if (!paused && !document.hidden) timer = setInterval(() => {
-   current = (current + 1) % logos.length;
-   logo.src = logos[current].src; logo.alt = logos[current].alt;
-  }, 4000);
- }
- toggle.addEventListener('click', () => { paused = !paused; sync(); });
- reducedMotion.addEventListener('change', event => { paused = event.matches; sync(); });
- document.addEventListener('visibilitychange', sync);
- sync();
-}
+const members=[["california","California","California Economic Funding Company™","State member",-119.5,36.5],["colorado","Colorado","Colorado Economic Funding Company™","State member",-105.5,39],["canada","Canada","Canada Economic Funding Company™","National member",-106,57],["ecuador","Ecuador","Ecuador Funding Company™","National member",-78,-1.5],["mississippi","Mississippi","Mississippi Economic Funding Corporation™","State member",-89.5,32.5],["germany","Germany","Germany Economic Funding Company™","National member",10.45,51.16],["switzerland","Switzerland","Switzerland Economic Funding Company™","National member",8.23,46.82],["netherlands","Netherlands","Netherlands Economic Funding Company™","National member",5.29,52.13],["philippines","Philippines","Philippines Economic Funding Company™","National member",122,12.8],["portugal","Portugal","Portugal Economic Funding Company™","National member",-8.22,39.4],["chile","Chile","Chile Economic Funding Company™","National member",-71.5,-35.7],["brazil","Brazil","Brazil Economic Funding Company™","National member",-51.9,-14.2],["venezuela","Venezuela","Venezuela Economic Funding Company™","National member",-66.6,6.4],["caribbean","Caribbean","Caribbean Economic Funding Company™","Regional member",-75,17],["puerto-rico","Puerto Rico","Puerto Rico Economic Funding Company™","Territory member",-66.59,18.22]];
+const menu=document.querySelector('.menu-toggle');menu.addEventListener('click',()=>{const open=menu.getAttribute('aria-expanded')==='true';menu.setAttribute('aria-expanded',String(!open));document.querySelector('nav').classList.toggle('open',!open)});
+let current=0,timer=null;const tour=document.getElementById('rotate-members');
+function selectMember(index){current=(index+members.length)%members.length;const [key,name,title,kind]=members[current];document.querySelectorAll('[data-member]').forEach(b=>{const active=b.dataset.member===key;b.classList.toggle('selected',active);b.setAttribute('aria-pressed',String(active))});document.getElementById('member-logo').src='assets/'+key+(current>=5?'-clean.png':'-transparent.png');document.getElementById('member-logo').alt=title+' logo';document.getElementById('member-title').textContent=title;document.getElementById('member-kind').textContent=kind.toUpperCase();document.getElementById('member-contact').href='contact.html?entity='+key;document.getElementById('member-position').textContent=String(current+1).padStart(2,'0')+' / '+String(members.length).padStart(2,'0')}
+function stopTour(){clearInterval(timer);timer=null;if(tour){tour.textContent='Play member tour';tour.setAttribute('aria-pressed','false')}}
+if(tour){document.querySelectorAll('[data-member]').forEach(b=>b.addEventListener('click',()=>{stopTour();selectMember(members.findIndex(m=>m[0]===b.dataset.member))}));document.getElementById('prev-member').addEventListener('click',()=>{stopTour();selectMember(current-1)});document.getElementById('next-member').addEventListener('click',()=>{stopTour();selectMember(current+1)});tour.addEventListener('click',()=>{if(timer)stopTour();else{selectMember(current+1);timer=setInterval(()=>selectMember(current+1),4000);tour.textContent='Pause member tour';tour.setAttribute('aria-pressed','true')}});document.addEventListener('visibilitychange',()=>{if(document.hidden)stopTour()})}
+const form=document.getElementById('inquiry-form');if(form){const entity=new URLSearchParams(location.search).get('entity');if(members.some(m=>m[0]===entity))form.elements.entity.value=entity;form.addEventListener('submit',e=>{e.preventDefault();const values=new FormData(form);const text=Array.from(values,([key,value])=>key+': '+value).join('\n\n');const url=URL.createObjectURL(new Blob([text],{type:'text/plain;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='efc-inquiry.txt';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);document.getElementById('form-status').textContent='Your inquiry has been downloaded. It has not been sent.'})}
